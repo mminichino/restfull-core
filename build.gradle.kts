@@ -62,7 +62,7 @@ publishing {
             pom {
                 name.set(project.name)
                 description.set("REST API Automation")
-                url.set("https://github.com/mminichino/restfull-java")
+                url.set("https://github.com/mminichino/restfull-core")
                 inceptionYear.set("2024")
                 licenses {
                     license {
@@ -77,9 +77,9 @@ publishing {
                     }
                 }
                 scm {
-                    connection.set("scm:git:https://github.com/mminichino/restfull-java.git")
-                    developerConnection.set("scm:git:ssh://github.com/mminichino/restfull-java.git")
-                    url.set("https://github.com/mminichino/restfull-java")
+                    connection.set("scm:git:https://github.com/mminichino/restfull-core.git")
+                    developerConnection.set("scm:git:ssh://git@github.com/mminichino/restfull-core.git")
+                    url.set("https://github.com/mminichino/restfull-core")
                 }
             }
         }
