@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.codelry.util"
-version = "1.0.0"
+version = "1.0.1"
 
 repositories {
     mavenCentral()
@@ -30,6 +30,13 @@ dependencies {
 java {
     withSourcesJar()
     withJavadocJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+tasks.compileJava {
+    options.release.set(8)
 }
 
 tasks.test {
