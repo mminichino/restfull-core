@@ -5,11 +5,11 @@ plugins {
     id("java")
     id("java-library")
     id("maven-publish")
-    id("org.jreleaser") version "1.14.0"
+    id("org.jreleaser") version "1.19.0"
 }
 
 group = "com.codelry.util"
-version = "1.0.1"
+version = "1.0.2"
 
 repositories {
     mavenCentral()
@@ -21,8 +21,8 @@ dependencies {
     implementation("org.apache.logging.log4j:log4j-core:2.24.0")
     implementation("org.apache.logging.log4j:log4j-api:2.24.0")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.24.0")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.17.2")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.17.2")
+    implementation("com.fasterxml.jackson.core:jackson-core:2.19.2")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.19.2")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 }

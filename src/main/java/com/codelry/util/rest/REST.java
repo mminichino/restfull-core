@@ -33,7 +33,7 @@ public class REST {
   private String password;
   private String token = null;
   private final Boolean useSsl;
-  private final Integer port;
+  private Integer port;
   private final OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder();
   private OkHttpClient client;
   private String credential;
@@ -141,6 +141,20 @@ public class REST {
   }
 
   /**
+   * Initialize REST instance.
+   *
+   * @param hostname The hostname or IP address of the API.
+   * @param useSsl Flag to indicate if the connection uses SSL.
+   */
+  public REST(String hostname, Boolean useSsl) {
+    this.hostname = hostname;
+    this.useSsl = useSsl;
+    this.enableDebug = false;
+    this.port = useSsl ? 443 : 80;
+    this.init();
+  }
+
+  /**
    * Initializes the REST client's SSL context, configures timeout settings,
    * sets authentication credentials, and adds necessary interceptors.
    * <p>
@@ -200,8 +214,12 @@ public class REST {
 
     if (token != null) {
       credential = "Bearer " + token;
-    } else {
+    } else if (username != null && password != null) {
       credential = Credentials.basic(username, password);
+    }
+
+    if (credential != null) {
+      clientBuilder.addInterceptor(new AuthorizationInterceptor(credential));
     }
 
     if (enableDebug) {
@@ -233,6 +251,29 @@ public class REST {
    */
   public REST enableDebug(boolean value) {
     this.enableDebug = value;
+    return this;
+  }
+
+  /**
+   * Adds an HTTP header to the REST client.
+   *
+   * @param name The name of the HTTP header to be added.
+   * @param value The value of the HTTP header to be added.
+   * @return The current REST instance with the HTTP header added.
+   */
+  public REST addHeader(String name, String value) {
+    client = client.newBuilder().addInterceptor(new HeaderInterceptor(name, value)).build();
+    return this;
+  }
+
+  /**
+   * Sets the port number for the API.
+   *
+   * @param port The port number to be set.
+   * @return The current REST instance with the port number updated.
+   */
+  public REST setPort(int port) {
+    this.port = port;
     return this;
   }
 
@@ -521,7 +562,7 @@ public class REST {
     long waitFactor = 100L;
     for (int retryNumber = 1; retryNumber <= retryCount; retryNumber++) {
       JsonNode response = get(endpoint).validate().json();
-      String result = response.get(key).toString();
+      String result = response.get(key).asText();
       if (result.equals(value)) {
         return true;
       }
@@ -583,7 +624,6 @@ public class REST {
   public Request basicRequest(String method, HttpUrl url) {
     return new Request.Builder()
         .url(url)
-        .header("Authorization", credential)
         .method(method, null)
         .build();
   }
@@ -599,7 +639,6 @@ public class REST {
     LOGGER.debug("buildGetRequest: {}", url);
     return new Request.Builder()
         .url(url)
-        .header("Authorization", credential)
         .build();
   }
 
@@ -615,7 +654,6 @@ public class REST {
     return new Request.Builder()
         .url(url)
         .method("POST", null)
-        .header("Authorization", credential)
         .build();
   }
 
@@ -632,7 +670,6 @@ public class REST {
     return new Request.Builder()
         .url(url)
         .post(body)
-        .header("Authorization", credential)
         .build();
   }
 
@@ -648,7 +685,6 @@ public class REST {
     return new Request.Builder()
         .url(url)
         .method("PUT", null)
-        .header("Authorization", credential)
         .build();
   }
 
@@ -665,7 +701,6 @@ public class REST {
     return new Request.Builder()
         .url(url)
         .put(body)
-        .header("Authorization", credential)
         .build();
   }
 
@@ -682,7 +717,6 @@ public class REST {
     return new Request.Builder()
         .url(url)
         .patch(body)
-        .header("Authorization", credential)
         .build();
   }
 
@@ -698,7 +732,6 @@ public class REST {
     return new Request.Builder()
         .url(url)
         .delete()
-        .header("Authorization", credential)
         .build();
   }
 
