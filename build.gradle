@@ -1,0 +1,135 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'org.jreleaser' version '1.24.0'
+}
+
+group = 'com.codelry.util'
+version = '1.0.3'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.10.0')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testRuntimeOnly 'org.junit-pioneer:junit-pioneer:2.3.0'
+    implementation 'org.apache.logging.log4j:log4j-core:2.26.0'
+    implementation 'org.apache.logging.log4j:log4j-api:2.26.0'
+    implementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.26.0'
+    implementation 'com.fasterxml.jackson.core:jackson-core:2.22.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.22.0'
+    implementation 'com.squareup.okhttp3:okhttp:5.4.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.4.0'
+}
+
+java {
+    withSourcesJar()
+    withJavadocJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+static def loadDotEnv(File file) {
+    if (!file.exists()) {
+        return [:]
+    }
+
+    file.readLines()
+            .findAll { it.trim() && !it.trim().startsWith('#') }
+            .collectEntries {
+                def (key, value) = it.split('=', 2)
+                [(key.trim()): value.trim()]
+            }
+}
+
+tasks.named('compileJava', JavaCompile) {
+    options.release = 8
+}
+
+tasks.named('test', Test) {
+    useJUnitPlatform()
+    def envVars = loadDotEnv(rootProject.file('.env'))
+    environment envVars
+    testLogging {
+        events "PASSED", "SKIPPED", "FAILED"
+    }
+}
+
+tasks.register('pushToGithub') {
+    doLast {
+        def stdout = new ByteArrayOutputStream()
+        exec {
+            commandLine 'git', 'commit', '-am', "Version $version"
+            standardOutput = stdout
+        }
+        exec {
+            commandLine 'git', 'push', '-u', 'origin'
+            standardOutput = stdout
+        }
+        println stdout
+    }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = project.group.toString()
+            artifactId = project.name
+
+            from components.java
+
+            pom {
+                name = project.name
+                description = 'REST API Automation'
+                url = 'https://github.com/mminichino/restfull-core'
+                inceptionYear = '2024'
+                licenses {
+                    license {
+                        name = 'Apache-2.0'
+                        url = 'https://spdx.org/licenses/Apache-2.0.html'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'mminichino'
+                        name = 'Michael Minichino'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:https://github.com/mminichino/restfull-core.git'
+                    developerConnection = 'scm:git:ssh://git@github.com/mminichino/restfull-core.git'
+                    url = 'https://github.com/mminichino/restfull-core'
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            url = layout.buildDirectory.dir('staging-deploy').get().asFile.toURI()
+        }
+    }
+}
+
+jreleaser {
+    signing {
+        active = 'ALWAYS'
+        armored = true
+    }
+    deploy {
+        maven {
+            mavenCentral {
+                sonatype {
+                    active = 'ALWAYS'
+                    url = 'https://central.sonatype.com/api/v1/publisher'
+                    stagingRepository('build/staging-deploy')
+                }
+            }
+        }
+    }
+}

@@ -9,16 +9,22 @@ import com.codelry.util.rest.exceptions.NotFoundError;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import java.nio.charset.Charset;
 
 public class RESTTest {
   static final Logger LOGGER = LogManager.getLogger(RESTTest.class);
   public boolean enableDebug = true;
-  public String token = "reqres-free-v1";
+  public static String token = "reqres-free-v1";
   public String hostname = "reqres.in";
   public boolean useSsl = true;
   ObjectMapper mapper = new ObjectMapper();
+
+  @BeforeAll
+  public static void setUp() {
+    RESTTest.token = System.getenv("TOKEN");
+  }
 
   @Test
   public void testRest1() {
