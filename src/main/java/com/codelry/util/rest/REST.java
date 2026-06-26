@@ -404,6 +404,27 @@ public class REST {
   }
 
   /**
+   * POST to endpoint with URL-encoded form data.
+   *
+   * @param endpoint The hostname or IP address of the API.
+   * @param formData Form fields to send in the request body.
+   * @return REST instance.
+   */
+  public REST post(String endpoint, Map<String, String> formData) {
+    FormBody.Builder formBuilder = new FormBody.Builder();
+    if (formData != null) {
+      formData.forEach((key, value) -> {
+        if (key != null && value != null) {
+          formBuilder.add(key, value);
+        }
+      });
+    }
+    RequestBody requestBody = formBuilder.build();
+    execHttpCall(buildPostRequest(endpoint, requestBody));
+    return this;
+  }
+
+  /**
    * PUT to endpoint with null body.
    *
    * @param endpoint The hostname or IP address of the API.
