@@ -21,6 +21,7 @@ import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -86,6 +87,12 @@ public class REST {
    * and the character set "utf-8".
    */
   public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
+
+  /**
+   * A constant representing the MediaType for String, specifying the MIME type "text/plain"
+   * and the character set "utf-8".
+   */
+  public static final MediaType STRING = MediaType.parse("text/plain; charset=utf-8");
 
   /**
    * Initialize REST instance.
@@ -348,6 +355,18 @@ public class REST {
   }
 
   /**
+   * GET from endpoint with query parameters.
+   *
+   * @param endpoint The API endpoint.
+   * @param parameters Query parameters to append to the URL.
+   * @return REST instance.
+   */
+  public REST get(String endpoint, Map<String, String> parameters) {
+    execHttpCall(buildGetRequest(endpoint, parameters));
+    return this;
+  }
+
+  /**
    * POST to endpoint with null body.
    *
    * @param endpoint The hostname or IP address of the API.
@@ -372,6 +391,19 @@ public class REST {
   }
 
   /**
+   * POST to endpoint with data in body.
+   *
+   * @param endpoint The hostname or IP address of the API.
+   * @param body Sting body.
+   * @return REST instance.
+   */
+  public REST post(String endpoint, String body) {
+    RequestBody requestBody = RequestBody.create(body, STRING);
+    execHttpCall(buildPostRequest(endpoint, requestBody));
+    return this;
+  }
+
+  /**
    * PUT to endpoint with null body.
    *
    * @param endpoint The hostname or IP address of the API.
@@ -391,6 +423,19 @@ public class REST {
    */
   public REST put(String endpoint, JsonNode json) {
     RequestBody requestBody = RequestBody.create(json.toString(), JSON);
+    execHttpCall(buildPutRequest(endpoint, requestBody));
+    return this;
+  }
+
+  /**
+   * PUT to endpoint with data in body.
+   *
+   * @param endpoint The hostname or IP address of the API.
+   * @param body String body.
+   * @return REST instance.
+   */
+  public REST put(String endpoint, String body) {
+    RequestBody requestBody = RequestBody.create(body, STRING);
     execHttpCall(buildPutRequest(endpoint, requestBody));
     return this;
   }
@@ -636,6 +681,29 @@ public class REST {
    */
   public Request buildGetRequest(String endpoint) {
     HttpUrl url = buildUrl(endpoint);
+    LOGGER.debug("buildGetRequest: {}", url);
+    return new Request.Builder()
+        .url(url)
+        .build();
+  }
+
+  /**
+   * Builds a GET request for the given endpoint with query parameters.
+   *
+   * @param endpoint The API endpoint for the GET request.
+   * @param parameters Query parameters to append to the URL.
+   * @return A Request object configured with the specified endpoint and query parameters.
+   */
+  public Request buildGetRequest(String endpoint, Map<String, String> parameters) {
+    HttpUrl.Builder urlBuilder = buildUrl(endpoint).newBuilder();
+    if (parameters != null) {
+      parameters.forEach((key, value) -> {
+        if (key != null && value != null) {
+          urlBuilder.addQueryParameter(key, value);
+        }
+      });
+    }
+    HttpUrl url = urlBuilder.build();
     LOGGER.debug("buildGetRequest: {}", url);
     return new Request.Builder()
         .url(url)
